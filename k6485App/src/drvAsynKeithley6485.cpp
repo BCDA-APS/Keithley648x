@@ -348,13 +348,14 @@ int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
     }
 #endif
 
-  /* Clear status */
-  if( writeOnly(pport,"*CLS") )
+  /* Reset device */
+  if( writeOnly(pport,"*RST") )
     {
-      errlogPrintf("%s::drvAsynKeithley6485 port %s failed to clear status\n",
+      errlogPrintf("%s::drvAsynKeithley6485 port %s failed to reset\n",
                    driver, myport);
       return asynError;
     }
+  
 
   /* Identification query */
   if( writeRead(pport,"*IDN?",inpBuf,sizeof(inpBuf),&eomReason) )
@@ -379,8 +380,6 @@ int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
   *(pport->brd_rev) = '\0';
   pport->brd_rev++;
   
-  
-
   /* Complete initialization */
   pport->init=1;
 

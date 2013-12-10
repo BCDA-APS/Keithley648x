@@ -29,7 +29,7 @@ cd ${TOP}/iocBoot/${IOC}
 # serial 1
 #drvAsynSerialPortConfigure("portName","ttyName",priority,noAutoConnect,
 #                            noProcessEos)
-drvAsynSerialPortConfigure("serial1", "/dev/ttyS0", 0, 0, 0)
+drvAsynSerialPortConfigure("serial1", "/dev/ttyS1", 0, 0, 0)
 asynSetOption(serial1, 0, "baud",   "9600")
 asynSetOption(serial1, 0, "bits",   "8")
 asynSetOption(serial1, 0, "parity", "none")

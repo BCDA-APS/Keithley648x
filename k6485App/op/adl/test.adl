@@ -5,8 +5,8 @@ file {
 }
 display {
 	object {
-		x=144
-		y=631
+		x=667
+		y=430
 		width=400
 		height=150
 	}
@@ -113,4 +113,31 @@ text {
 		clr=14
 	}
 	textix="Main"
+}
+"related display" {
+	object {
+		x=135
+		y=95
+		width=20
+		height=20
+	}
+	display[0] {
+		label="RGA asyn"
+		name="asynOctet.adl"
+		args="P=k6485:,R=asyn_k6485"
+	}
+	clr=14
+	bclr=51
+}
+text {
+	object {
+		x=85
+		y=95
+		width=40
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Asyn"
 }
