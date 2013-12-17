@@ -41,7 +41,7 @@
 #include <asynStandardInterfaces.h>
 
 /* Define symbolic constants */
-#define TIMEOUT         (1.0)
+#define TIMEOUT         (5.0)
 #define BUFFER_SIZE     (100)
 
 
@@ -205,35 +205,55 @@ static asynStatus writeRange(int which, Port *pport, void* data, Type Iface);
 static asynStatus readRate(int which, Port *pport, void* data, 
                            Type Iface, size_t *length, int *eom);
 static asynStatus writeRate(int which, Port *pport, void* data, Type Iface);
+static asynStatus readCommon(int which, Port *pport, void* data, 
+                             Type Iface, size_t *length, int *eom);
+static asynStatus writeCommon(int which, Port *pport, void* data, Type Iface);
 
 
 
 
 // General commands that need special attention go here
 enum { VOID_CMD, READ_CMD, RANGE_CMD, RANGE_AUTO_ULIMIT_CMD, 
-       RANGE_AUTO_LLIMIT_CMD, RATE_CMD, GEN_CMD_NUMBER };
+       RANGE_AUTO_LLIMIT_CMD, RATE_CMD, DIGITAL_FILTER_CONTROL_CMD,
+       GEN_CMD_NUMBER };
 static GenCommand genCommandTable[GEN_CMD_NUMBER] = 
   {
-    { readDummy,          writeDummy}, // VOID
-    { readSensorReading,  writeDummy}, // READ
-    { readRange,          writeRange}, // RANGE
-    { readRange,          writeRange}, // RANGE_AUTO_ULIMIT
-    { readRange,          writeRange}, // RANGE_AUTO_LLIMIT
-    { readRate,           writeRate},  // RATE
+    { readDummy,          writeDummy},  // VOID
+    { readSensorReading,  writeDummy},  // READ
+    { readRange,          writeRange},  // RANGE
+    { readRange,          writeRange},  // RANGE_AUTO_ULIMIT
+    { readRange,          writeRange},  // RANGE_AUTO_LLIMIT
+    { readRate,           writeRate},   // RATE
+    { readCommon,         writeCommon}, // DIGITAL_FILTER_CONTROL
   };
 
 // commands that are very simple-minded go here
-enum { RANGE_AUTO_CMD, ZERO_CHECK_CMD, ZERO_CORRECT_CMD,
-       ZERO_CORRECT_ACQUIRE_CMD, SIMPLE_CMD_NUMBER };
+enum { RESET_CMD, RANGE_AUTO_CMD,
+       ZERO_CHECK_CMD, ZERO_CORRECT_CMD, ZERO_CORRECT_ACQUIRE_CMD, 
+       MEDIAN_FILTER_CMD, MEDIAN_FILTER_RANK_CMD, 
+       DIGITAL_FILTER_CMD, DIGITAL_FILTER_COUNT_CMD,
+       SIMPLE_CMD_NUMBER};
 
 enum { SIMPLE_TRIGGER=0, SIMPLE_OCTET=Octet, SIMPLE_FLOAT64=Float64, 
        SIMPLE_INT32=Int32 };
 static SimpleCommand simpleCommandTable[SIMPLE_CMD_NUMBER] = 
   {
+    { SIMPLE_TRIGGER, "*RST"},           // RESET DEVICE
+
     { SIMPLE_INT32,   ":RANGE:AUTO"},    // RANGE_AUTO
+
     { SIMPLE_INT32,   "SYST:ZCH"},       // ZERO CHECK
     { SIMPLE_INT32,   "SYST:ZCOR"},      // ZERO CORRECT
     { SIMPLE_TRIGGER, "SYST:ZCOR:ACQ"},  // ZERO CORRECT ACQUIRE
+
+    { SIMPLE_INT32,   "MED"},            // MEDIAN FILTER
+    { SIMPLE_INT32,   "MED:RANK"},       // MEDIAN FILTER RANK
+
+    { SIMPLE_INT32,   "AVER"},           // DIGITAL FILTER
+    { SIMPLE_INT32,   "AVER:COUN"},      // DIGITAL FILTER COUNT
+
+    // { SIMPLE_INT32,   "AVER:"},      // 
+    // { SIMPLE_INT32,   "AVER:"},      // 
   };
 
 
@@ -248,31 +268,37 @@ enum { TIMESTAMP_CMD, STATUS_RAW_CMD, STATUS_OVERFLOW_CMD, STATUS_FILTER_CMD,
 enum { GEN_CMD_TYPE, SIMPLE_CMD_TYPE, CACHE_CMD_TYPE };
 static Command commandTable[ COMMAND_NUMBER ] = 
   {
-    { "VOID",                 GEN_CMD_TYPE,    VOID_CMD                 },
-    { "READ",                 GEN_CMD_TYPE,    READ_CMD                 },
-    { "RANGE",                GEN_CMD_TYPE,    RANGE_CMD                },
-    { "RANGE_AUTO_ULIMIT",    GEN_CMD_TYPE,    RANGE_AUTO_ULIMIT_CMD    },
-    { "RANGE_AUTO_LLIMIT",    GEN_CMD_TYPE,    RANGE_AUTO_LLIMIT_CMD    },
-    { "RATE",                 GEN_CMD_TYPE,    RATE_CMD                 },
-    { "RANGE_AUTO",           SIMPLE_CMD_TYPE, RANGE_AUTO_CMD           },
-    { "ZERO_CHECK",           SIMPLE_CMD_TYPE, ZERO_CHECK_CMD           },
-    { "ZERO_CORRECT",         SIMPLE_CMD_TYPE, ZERO_CORRECT_CMD         },
-    { "ZERO_CORRECT_ACQUIRE", SIMPLE_CMD_TYPE, ZERO_CORRECT_ACQUIRE_CMD },
-    { "MODEL",                CACHE_CMD_TYPE,  MODEL_CMD                },
-    { "SERIAL",               CACHE_CMD_TYPE,  SERIAL_CMD               },
-    { "DIG_REV",              CACHE_CMD_TYPE,  DIG_REV_CMD              },
-    { "DISP_REV",             CACHE_CMD_TYPE,  DISP_REV_CMD             },
-    { "BRD_REV",              CACHE_CMD_TYPE,  BRD_REV_CMD              },
-    { "TIMESTAMP",            CACHE_CMD_TYPE,  TIMESTAMP_CMD            },
-    { "STATUS_RAW",           CACHE_CMD_TYPE,  STATUS_RAW_CMD           },
-    { "STATUS_OVERFLOW",      CACHE_CMD_TYPE,  STATUS_OVERFLOW_CMD      },
-    { "STATUS_FILTER",        CACHE_CMD_TYPE,  STATUS_FILTER_CMD        },
-    { "STATUS_MATH",          CACHE_CMD_TYPE,  STATUS_MATH_CMD          },
-    { "STATUS_NULL",          CACHE_CMD_TYPE,  STATUS_NULL_CMD          },
-    { "STATUS_LIMITS",        CACHE_CMD_TYPE,  STATUS_LIMITS_CMD        },
-    { "STATUS_OVERVOLTAGE",   CACHE_CMD_TYPE,  STATUS_OVERVOLTAGE_CMD   },
-    { "STATUS_ZERO_CHECK",    CACHE_CMD_TYPE,  STATUS_ZERO_CHECK_CMD    },
-    { "STATUS_ZERO_CORRECT",  CACHE_CMD_TYPE,  STATUS_ZERO_CORRECT_CMD  },
+    { "VOID",                   GEN_CMD_TYPE,    VOID_CMD                   },
+    { "READ",                   GEN_CMD_TYPE,    READ_CMD                   },
+    { "RANGE",                  GEN_CMD_TYPE,    RANGE_CMD                  },
+    { "RANGE_AUTO_ULIMIT",      GEN_CMD_TYPE,    RANGE_AUTO_ULIMIT_CMD      },
+    { "RANGE_AUTO_LLIMIT",      GEN_CMD_TYPE,    RANGE_AUTO_LLIMIT_CMD      },
+    { "RATE",                   GEN_CMD_TYPE,    RATE_CMD                   },
+    { "DIGITAL_FILTER_CONTROL", GEN_CMD_TYPE,    DIGITAL_FILTER_CONTROL_CMD },
+    { "RESET",                  SIMPLE_CMD_TYPE, RESET_CMD                  },
+    { "RANGE_AUTO",             SIMPLE_CMD_TYPE, RANGE_AUTO_CMD             },
+    { "ZERO_CHECK",             SIMPLE_CMD_TYPE, ZERO_CHECK_CMD             },
+    { "ZERO_CORRECT",           SIMPLE_CMD_TYPE, ZERO_CORRECT_CMD           },
+    { "ZERO_CORRECT_ACQUIRE",   SIMPLE_CMD_TYPE, ZERO_CORRECT_ACQUIRE_CMD   },
+    { "MEDIAN_FILTER",          SIMPLE_CMD_TYPE, MEDIAN_FILTER_CMD          },
+    { "MEDIAN_FILTER_RANK",     SIMPLE_CMD_TYPE, MEDIAN_FILTER_RANK_CMD     },
+    { "DIGITAL_FILTER",         SIMPLE_CMD_TYPE, DIGITAL_FILTER_CMD         },
+    { "DIGITAL_FILTER_COUNT",   SIMPLE_CMD_TYPE, DIGITAL_FILTER_COUNT_CMD   },
+    { "MODEL",                  CACHE_CMD_TYPE,  MODEL_CMD                  },
+    { "SERIAL",                 CACHE_CMD_TYPE,  SERIAL_CMD                 },
+    { "DIG_REV",                CACHE_CMD_TYPE,  DIG_REV_CMD                },
+    { "DISP_REV",               CACHE_CMD_TYPE,  DISP_REV_CMD               },
+    { "BRD_REV",                CACHE_CMD_TYPE,  BRD_REV_CMD                },
+    { "TIMESTAMP",              CACHE_CMD_TYPE,  TIMESTAMP_CMD              },
+    { "STATUS_RAW",             CACHE_CMD_TYPE,  STATUS_RAW_CMD             },
+    { "STATUS_OVERFLOW",        CACHE_CMD_TYPE,  STATUS_OVERFLOW_CMD        },
+    { "STATUS_FILTER",          CACHE_CMD_TYPE,  STATUS_FILTER_CMD          },
+    { "STATUS_MATH",            CACHE_CMD_TYPE,  STATUS_MATH_CMD            },
+    { "STATUS_NULL",            CACHE_CMD_TYPE,  STATUS_NULL_CMD            },
+    { "STATUS_LIMITS",          CACHE_CMD_TYPE,  STATUS_LIMITS_CMD          },
+    { "STATUS_OVERVOLTAGE",     CACHE_CMD_TYPE,  STATUS_OVERVOLTAGE_CMD     },
+    { "STATUS_ZERO_CHECK",      CACHE_CMD_TYPE,  STATUS_ZERO_CHECK_CMD      },
+    { "STATUS_ZERO_CORRECT",    CACHE_CMD_TYPE,  STATUS_ZERO_CORRECT_CMD    },
   };
 
 
@@ -349,9 +375,9 @@ int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
 #endif
 
   /* Reset device */
-  if( writeOnly(pport,"*RST") )
+  if( writeOnly(pport,"*CLS") )
     {
-      errlogPrintf("%s::drvAsynKeithley6485 port %s failed to reset\n",
+      errlogPrintf("%s::drvAsynKeithley6485 port %s failed to clear\n",
                    driver, myport);
       return asynError;
     }
@@ -384,7 +410,7 @@ int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
   pport->init=1;
 
   pport->data.reading = 0.0;
-  pport->data.timestamp = 0.0;
+  pport->data.timestamp = 0;
   pport->data.status.raw = 0;
 
   return asynSuccess;
@@ -718,12 +744,12 @@ static asynStatus readRate(int which, Port *pport, void *data,
   val = atof( inpBuf);
   if( val > 1.0)
     rate = 0; // SLOW
-  else if( rate > 0.1)
+  else if( val > 0.1)
     rate = 1; // MEDIUM
   else
     rate = 2; // FAST
   
-  *(epicsInt32*) data = rate;
+  *((epicsInt32*) data) = rate;
 
   return asynSuccess;
 }
@@ -753,9 +779,71 @@ static asynStatus writeRate( int which, Port *pport, void *data, Type Iface)
     case 2:
       val = 0.1;
       break;
+    default:
+      val = 1.0;
+      break;
     }
 
   sprintf( outBuf, ":NPLC %g", val );
+  return writeOnly( pport, outBuf);
+}
+
+
+static asynStatus readCommon(int which, Port *pport, void *data, 
+                             Type Iface, size_t *length, int *eom)
+{
+  asynStatus status;
+  char inpBuf[BUFFER_SIZE];
+
+  int val;
+
+  if( Iface != Int32)
+    return asynSuccess;
+
+  switch(which)
+    {
+    case DIGITAL_FILTER_CONTROL_CMD:
+      status = writeRead( pport, "AVER:TCON?", inpBuf, BUFFER_SIZE, 
+                          &pport->data.eom);
+
+      if( status != asynSuccess)
+        return status;
+      if( !strcmp( "MOV", inpBuf) )
+        val = 0;
+      else if( !strcmp( "REP", inpBuf) )
+        val = 1;
+      else
+        return asynError;
+      break;
+    }
+  
+  *((epicsInt32*) data) = val;
+
+  return asynSuccess;
+}
+
+
+static asynStatus writeCommon( int which, Port *pport, void *data, Type Iface)
+{
+  char outBuf[BUFFER_SIZE];
+  int val;
+
+  if( Iface != Int32)
+    return asynSuccess;
+
+  val = *((epicsInt32*) data);
+  switch( which)
+    {
+    case DIGITAL_FILTER_CONTROL_CMD:
+      if( !val)
+        sprintf( outBuf, "AVER:TCON MOV" );
+      else if(val == 1)
+        sprintf( outBuf, "AVER:TCON REP" );
+      else
+        return asynError;
+      break;
+    }
+
   return writeOnly( pport, outBuf);
 }
 
