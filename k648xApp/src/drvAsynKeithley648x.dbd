@@ -1,2 +1,2 @@
-# Kiethley 6485 picoammeter
-registrar(drvAsynKeithley6485Register)
+# Keithley 6485/6487 picoammeter
+registrar(drvAsynKeithley648xRegister)

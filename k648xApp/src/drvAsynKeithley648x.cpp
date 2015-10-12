@@ -47,12 +47,13 @@
 
 typedef enum {Octet=1, Float64=2, Int32=3} Type;
 
-static const char *driver = "drvAsynKeithley6485";      /* String for asynPrint */
+static const char *driver = "drvAsynKeithley648x";      /* String for asynPrint */
 
 
 /* Declare port driver structure */
 struct Port
 {
+  int devtype; // 1:6485, 2:6487
   char* myport;
   char* ioport;
   int ioaddr;
@@ -121,6 +122,7 @@ struct Port
 struct Command
 {
   const char *tag;
+  int dev;
   int type;
   int id;
 };
@@ -141,7 +143,7 @@ struct SimpleCommand
 };
 
 /* Public interface forward references */
-int drvAsynKeithley6485(const char* myport,const char* ioport, int ioaddr);
+int drvAsynKeithley648x(const char* myport,const char* ioport, int ioaddr);
 
 
 /* Forward references for asynCommon methods */
@@ -215,6 +217,7 @@ static asynStatus writeCommon(int which, Port *pport, void* data, Type Iface);
 // General commands that need special attention go here
 enum { VOID_CMD, READ_CMD, RANGE_CMD, RANGE_AUTO_ULIMIT_CMD, 
        RANGE_AUTO_LLIMIT_CMD, RATE_CMD, DIGITAL_FILTER_CONTROL_CMD,
+       VOLT_RANGE_CMD, 
        GEN_CMD_NUMBER };
 static GenCommand genCommandTable[GEN_CMD_NUMBER] = 
   {
@@ -225,6 +228,7 @@ static GenCommand genCommandTable[GEN_CMD_NUMBER] =
     { readRange,          writeRange},  // RANGE_AUTO_LLIMIT
     { readRate,           writeRate},   // RATE
     { readCommon,         writeCommon}, // DIGITAL_FILTER_CONTROL
+    { readCommon,         writeCommon}, // VOLT_RANGE_COMMAND
   };
 
 // commands that are very simple-minded go here
@@ -265,40 +269,42 @@ enum { TIMESTAMP_CMD, STATUS_RAW_CMD, STATUS_OVERFLOW_CMD, STATUS_FILTER_CMD,
 
 #define COMMAND_NUMBER (GEN_CMD_NUMBER + SIMPLE_CMD_NUMBER + CACHE_CMD_NUMBER)
 
-enum { GEN_CMD_TYPE, SIMPLE_CMD_TYPE, CACHE_CMD_TYPE };
+enum { CMD_GEN, CMD_SIMPLE, CMD_CACHE };
+enum { DEV_ALL, DEV_6485, DEV_6487};
 static Command commandTable[ COMMAND_NUMBER ] = 
   {
-    { "VOID",                   GEN_CMD_TYPE,    VOID_CMD                   },
-    { "READ",                   GEN_CMD_TYPE,    READ_CMD                   },
-    { "RANGE",                  GEN_CMD_TYPE,    RANGE_CMD                  },
-    { "RANGE_AUTO_ULIMIT",      GEN_CMD_TYPE,    RANGE_AUTO_ULIMIT_CMD      },
-    { "RANGE_AUTO_LLIMIT",      GEN_CMD_TYPE,    RANGE_AUTO_LLIMIT_CMD      },
-    { "RATE",                   GEN_CMD_TYPE,    RATE_CMD                   },
-    { "DIGITAL_FILTER_CONTROL", GEN_CMD_TYPE,    DIGITAL_FILTER_CONTROL_CMD },
-    { "RESET",                  SIMPLE_CMD_TYPE, RESET_CMD                  },
-    { "RANGE_AUTO",             SIMPLE_CMD_TYPE, RANGE_AUTO_CMD             },
-    { "ZERO_CHECK",             SIMPLE_CMD_TYPE, ZERO_CHECK_CMD             },
-    { "ZERO_CORRECT",           SIMPLE_CMD_TYPE, ZERO_CORRECT_CMD           },
-    { "ZERO_CORRECT_ACQUIRE",   SIMPLE_CMD_TYPE, ZERO_CORRECT_ACQUIRE_CMD   },
-    { "MEDIAN_FILTER",          SIMPLE_CMD_TYPE, MEDIAN_FILTER_CMD          },
-    { "MEDIAN_FILTER_RANK",     SIMPLE_CMD_TYPE, MEDIAN_FILTER_RANK_CMD     },
-    { "DIGITAL_FILTER",         SIMPLE_CMD_TYPE, DIGITAL_FILTER_CMD         },
-    { "DIGITAL_FILTER_COUNT",   SIMPLE_CMD_TYPE, DIGITAL_FILTER_COUNT_CMD   },
-    { "MODEL",                  CACHE_CMD_TYPE,  MODEL_CMD                  },
-    { "SERIAL",                 CACHE_CMD_TYPE,  SERIAL_CMD                 },
-    { "DIG_REV",                CACHE_CMD_TYPE,  DIG_REV_CMD                },
-    { "DISP_REV",               CACHE_CMD_TYPE,  DISP_REV_CMD               },
-    { "BRD_REV",                CACHE_CMD_TYPE,  BRD_REV_CMD                },
-    { "TIMESTAMP",              CACHE_CMD_TYPE,  TIMESTAMP_CMD              },
-    { "STATUS_RAW",             CACHE_CMD_TYPE,  STATUS_RAW_CMD             },
-    { "STATUS_OVERFLOW",        CACHE_CMD_TYPE,  STATUS_OVERFLOW_CMD        },
-    { "STATUS_FILTER",          CACHE_CMD_TYPE,  STATUS_FILTER_CMD          },
-    { "STATUS_MATH",            CACHE_CMD_TYPE,  STATUS_MATH_CMD            },
-    { "STATUS_NULL",            CACHE_CMD_TYPE,  STATUS_NULL_CMD            },
-    { "STATUS_LIMITS",          CACHE_CMD_TYPE,  STATUS_LIMITS_CMD          },
-    { "STATUS_OVERVOLTAGE",     CACHE_CMD_TYPE,  STATUS_OVERVOLTAGE_CMD     },
-    { "STATUS_ZERO_CHECK",      CACHE_CMD_TYPE,  STATUS_ZERO_CHECK_CMD      },
-    { "STATUS_ZERO_CORRECT",    CACHE_CMD_TYPE,  STATUS_ZERO_CORRECT_CMD    },
+    { "VOID",                   DEV_ALL,  CMD_GEN,    VOID_CMD                   },
+    { "READ",                   DEV_ALL,  CMD_GEN,    READ_CMD                   },
+    { "RANGE",                  DEV_ALL,  CMD_GEN,    RANGE_CMD                  },
+    { "RANGE_AUTO_ULIMIT",      DEV_ALL,  CMD_GEN,    RANGE_AUTO_ULIMIT_CMD      },
+    { "RANGE_AUTO_LLIMIT",      DEV_ALL,  CMD_GEN,    RANGE_AUTO_LLIMIT_CMD      },
+    { "RATE",                   DEV_ALL,  CMD_GEN,    RATE_CMD                   },
+    { "DIGITAL_FILTER_CONTROL", DEV_ALL,  CMD_GEN,    DIGITAL_FILTER_CONTROL_CMD },
+    { "VOLT_RANGE",             DEV_6487, CMD_GEN,    VOLT_RANGE_CMD             },
+    { "RESET",                  DEV_ALL,  CMD_SIMPLE, RESET_CMD                  },
+    { "RANGE_AUTO",             DEV_ALL,  CMD_SIMPLE, RANGE_AUTO_CMD             },
+    { "ZERO_CHECK",             DEV_ALL,  CMD_SIMPLE, ZERO_CHECK_CMD             },
+    { "ZERO_CORRECT",           DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_CMD           },
+    { "ZERO_CORRECT_ACQUIRE",   DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_ACQUIRE_CMD   },
+    { "MEDIAN_FILTER",          DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_CMD          },
+    { "MEDIAN_FILTER_RANK",     DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_RANK_CMD     },
+    { "DIGITAL_FILTER",         DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_CMD         },
+    { "DIGITAL_FILTER_COUNT",   DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_COUNT_CMD   },
+    { "MODEL",                  DEV_ALL,  CMD_CACHE,  MODEL_CMD                  },
+    { "SERIAL",                 DEV_ALL,  CMD_CACHE,  SERIAL_CMD                 },
+    { "DIG_REV",                DEV_ALL,  CMD_CACHE,  DIG_REV_CMD                },
+    { "DISP_REV",               DEV_ALL,  CMD_CACHE,  DISP_REV_CMD               },
+    { "BRD_REV",                DEV_ALL,  CMD_CACHE,  BRD_REV_CMD                },
+    { "TIMESTAMP",              DEV_ALL,  CMD_CACHE,  TIMESTAMP_CMD              },
+    { "STATUS_RAW",             DEV_ALL,  CMD_CACHE,  STATUS_RAW_CMD             },
+    { "STATUS_OVERFLOW",        DEV_ALL,  CMD_CACHE,  STATUS_OVERFLOW_CMD        },
+    { "STATUS_FILTER",          DEV_ALL,  CMD_CACHE,  STATUS_FILTER_CMD          },
+    { "STATUS_MATH",            DEV_ALL,  CMD_CACHE,  STATUS_MATH_CMD            },
+    { "STATUS_NULL",            DEV_ALL,  CMD_CACHE,  STATUS_NULL_CMD            },
+    { "STATUS_LIMITS",          DEV_ALL,  CMD_CACHE,  STATUS_LIMITS_CMD          },
+    { "STATUS_OVERVOLTAGE",     DEV_ALL,  CMD_CACHE,  STATUS_OVERVOLTAGE_CMD     },
+    { "STATUS_ZERO_CHECK",      DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CHECK_CMD      },
+    { "STATUS_ZERO_CORRECT",    DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CORRECT_CMD    },
   };
 
 
@@ -306,7 +312,8 @@ static Command commandTable[ COMMAND_NUMBER ] =
 /****************************************************************************
  * Define public interface methods
  ****************************************************************************/
-int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
+int drvAsynKeithley648x(const char *type, const char *myport,
+                        const char *ioport, int ioaddr)
 {
   int status = asynSuccess;
   Port* pport;
@@ -320,6 +327,20 @@ int drvAsynKeithley6485(const char* myport,const char* ioport,int ioaddr)
   pport->myport = epicsStrDup(myport);
   pport->ioport = epicsStrDup(ioport);
   pport->ioaddr = ioaddr;
+
+  pport->devtype = DEV_ALL;
+  if( !strcmp("6485", type))
+    pport->devtype = DEV_6485;
+  if( !strcmp("6487", type))
+    pport->devtype = DEV_6487;
+  if(pport->devtype == DEV_ALL) // DEV_ALL is not a real device
+    {
+      errlogPrintf("%s::drvAsynKeithley6485 type has to be "
+                   "either \'6485\' or \'6487\'.\n",
+                   driver, myport, ioport, ioaddr);
+      return asynError;
+    }
+
 
   status = pasynOctetSyncIO->connect(ioport,ioaddr,&pport->pasynUser,NULL);
   if (status != asynSuccess)
@@ -856,7 +877,7 @@ static void report(void* ppvt,FILE* fp,int details)
   //  int i;
   Port* pport = (Port*)ppvt;
 
-  fprintf( fp, "Keithley6485 port: %s\n", pport->myport);
+  fprintf( fp, "Keithley648x port: %s\n", pport->myport);
   if( details)
     {
       fprintf( fp, "    server:     %s\n", pport->ioport);
@@ -895,6 +916,14 @@ static asynStatus create(void* ppvt, asynUser *pasynUser, const char *drvInfo,
   for(i = 0; i < COMMAND_NUMBER; i++) 
     if( !epicsStrCaseCmp( drvInfo, commandTable[i].tag) ) 
       {
+        if( (commandTable[i].dev != DEV_ALL) && 
+            (commandTable[i].dev != pport->devtype) )
+          {
+            errlogPrintf("%s::create port %s failed as tag %s is for different "
+                         "device\n", driver, pport->myport, drvInfo);
+            pasynUser->reason = 0;
+            return asynError;
+          }
         pasynUser->reason = i;
         break;
       }
@@ -943,10 +972,10 @@ static asynStatus writeFloat64(void* ppvt,asynUser* pasynUser,
 
    switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       return genCommandTable[id].writeFunc(id, pport, &value, Float64);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       return writeSimpleData( id, pport, &value, Float64);
       break;
     }
@@ -968,14 +997,14 @@ static asynStatus readFloat64(void* ppvt,asynUser* pasynUser,
 
   switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       return genCommandTable[id].readFunc(id, pport, value, Float64, 
                                           NULL, NULL);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       return readSimpleData( id, pport, value, Float64, NULL, NULL);
       break;
-    case CACHE_CMD_TYPE:
+    case CMD_CACHE:
       return readCache(id, pport, value, Float64, NULL, NULL);
       break;
     }
@@ -1000,10 +1029,10 @@ static asynStatus writeInt32(void *ppvt, asynUser *pasynUser, epicsInt32 value)
 
   switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       return genCommandTable[id].writeFunc(id, pport, &value, Int32);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       return writeSimpleData( id, pport, (void *) &value, Int32);
       break;
     }
@@ -1024,14 +1053,14 @@ static asynStatus readInt32(void *ppvt, asynUser *pasynUser, epicsInt32 *value)
 
   switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       return genCommandTable[id].readFunc(id, pport, value, Int32, 
                                           NULL, NULL);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       return readSimpleData( id, pport, value, Int32, NULL, NULL);
       break;
-    case CACHE_CMD_TYPE:
+    case CMD_CACHE:
       return readCache(id, pport, value, Int32, NULL, NULL);
       break;
     }
@@ -1062,11 +1091,11 @@ static asynStatus writeOctet(void *ppvt, asynUser *pasynUser, const char *data,
 
   switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       *nbytes=strlen(data);
       return genCommandTable[id].writeFunc(id, pport, (void *) data, Octet);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       *nbytes=strlen(data);
       return writeSimpleData( id, pport, &data, Octet);
       break;
@@ -1089,14 +1118,14 @@ static asynStatus readOctet(void* ppvt, asynUser* pasynUser, char* data,
 
   switch( commandTable[which].type )
     {
-    case GEN_CMD_TYPE:
+    case CMD_GEN:
       return genCommandTable[id].readFunc(id, pport, (void *) data, Octet, 
                                           nbytes, eom);
       break;
-    case SIMPLE_CMD_TYPE:
+    case CMD_SIMPLE:
       return readSimpleData( id, pport, data, Octet, nbytes, eom);
       break;
-    case CACHE_CMD_TYPE:
+    case CMD_CACHE:
       return readCache(id, pport, (void *) data, Octet, nbytes, eom);
       break;
     }
@@ -1106,7 +1135,7 @@ static asynStatus readOctet(void* ppvt, asynUser* pasynUser, char* data,
 
 
 /****************************************************************************
- * Define private Keithley6485 external interface asynOctet methods
+ * Define private Keithley648x external interface asynOctet methods
  ****************************************************************************/
 static asynStatus writeOnly(Port *pport, const char *outBuf)
 {
@@ -1175,25 +1204,27 @@ static asynStatus writeRead(Port *pport, const char *outBuf, char *inpBuf,
  ****************************************************************************/
  
 /* Initialization method definitions */
-static const iocshArg arg0 = {"myport",iocshArgString};
-static const iocshArg arg1 = {"ioport",iocshArgString};
-static const iocshArg arg2 = {"ioaddr",iocshArgInt};
-static const iocshArg* args[]= {&arg0,&arg1,&arg2};
-static const iocshFuncDef drvAsynKeithley6485FuncDef = {"drvAsynKeithley6485",3,args};
-static void drvAsynKeithley6485CallFunc(const iocshArgBuf* args)
+static const iocshArg arg0 = {"type",iocshArgString};
+static const iocshArg arg1 = {"myport",iocshArgString};
+static const iocshArg arg2 = {"ioport",iocshArgString};
+static const iocshArg arg3 = {"ioaddr",iocshArgInt};
+static const iocshArg* args[]= {&arg0,&arg1,&arg2,&arg3};
+static const iocshFuncDef drvAsynKeithley648xFuncDef = 
+  {"drvAsynKeithley648x",4,args};
+static void drvAsynKeithley648xCallFunc(const iocshArgBuf* args)
 {
-  drvAsynKeithley6485(args[0].sval,args[1].sval,args[2].ival);
+  drvAsynKeithley648x(args[0].sval,args[1].sval,args[2].sval,args[3].ival);
 }
 
 /* Registration method */
-static void drvAsynKeithley6485Register(void)
+static void drvAsynKeithley648xRegister(void)
 {
   static int firstTime = 1;
 
   if( firstTime )
     {
       firstTime = 0;
-      iocshRegister( &drvAsynKeithley6485FuncDef,drvAsynKeithley6485CallFunc );
+      iocshRegister( &drvAsynKeithley648xFuncDef,drvAsynKeithley648xCallFunc );
     }
 }
-epicsExportRegistrar( drvAsynKeithley6485Register );
+epicsExportRegistrar( drvAsynKeithley648xRegister );
