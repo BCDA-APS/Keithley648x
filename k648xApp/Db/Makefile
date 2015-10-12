@@ -10,7 +10,8 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install)
 # databases, templates, substitutions like this
-DB += drvAsynKeithley6485.db
+DB += Keithley6485.db
+DB += Keithley6487.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

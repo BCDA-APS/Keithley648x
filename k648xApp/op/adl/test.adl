@@ -1,12 +1,12 @@
 
 file {
-	name="/home/oxygen25/DOHNARMS/controls/epics/Keithley_6485/k6485/k6485App/op/adl/test.adl"
+	name="/home/oxygen25/DOHNARMS/epics_modules/hardware/Keithley_648x/k648x/k648xApp/op/adl/test.adl"
 	version=030107
 }
 display {
 	object {
-		x=667
-		y=430
+		x=744
+		y=80
 		width=400
 		height=150
 	}
@@ -97,7 +97,7 @@ display {
 	display[0] {
 		label="CA"
 		name="Keithley6485.adl"
-		args="P=k6485:,CA=CA1"
+		args="P=k648x:,CA=CA1"
 	}
 	clr=0
 	bclr=64
@@ -124,7 +124,7 @@ text {
 	display[0] {
 		label="RGA asyn"
 		name="asynOctet.adl"
-		args="P=k6485:,R=asyn_k6485"
+		args="P=k648x:,R=asyn_k648x"
 	}
 	clr=14
 	bclr=51
