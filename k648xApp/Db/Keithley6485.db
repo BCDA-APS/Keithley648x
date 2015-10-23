@@ -6,30 +6,45 @@ record(bo, "$(P)$(CA)reset")
     field(OUT,  "@asyn($(PORT)) RESET")
     field(ZNAM, "Off")
     field(ONAM, "On")
-    field(FLNK, "$(P)$(CA)resetFanout1")
+    field(FLNK, "$(P)$(CA)refreshFanout1")
 }
 
-record( fanout, "$(P)$(CA)resetFanout1")
+record( fanout, "$(P)$(CA)refresh")
+{
+    field(LNK1, "$(P)$(CA)refreshFanout1")
+}
+
+record( fanout, "$(P)$(CA)refreshFanout1")
 {
     field(LNK1, "$(P)$(CA)rate")
     field(LNK2, "$(P)$(CA)range")
     field(LNK3, "$(P)$(CA)rangeAuto")
     field(LNK4, "$(P)$(CA)rangeAutoUlimit")
     field(LNK5, "$(P)$(CA)rangeAutoLlimit")
-    field(FLNK, "$(P)$(CA)resetFanout2")
+    field(FLNK, "$(P)$(CA)refreshFanout2")
 }
 
-record( fanout, "$(P)$(CA)resetFanout2")
+record( fanout, "$(P)$(CA)refreshFanout2")
 {
     field(LNK1, "$(P)$(CA)zeroCheck")
     field(LNK2, "$(P)$(CA)zeroCorrect")
+    field(FLNK, "$(P)$(CA)refreshFanout3")
 }
 
+record( fanout, "$(P)$(CA)refreshFanout3")
+{
+    field(LNK1, "$(P)$(CA)medianFilter")
+    field(LNK2, "$(P)$(CA)medianFilterRank")
+    field(LNK3, "$(P)$(CA)digitalFilter")
+    field(LNK4, "$(P)$(CA)digitalFilterCount")
+    field(LNK5, "$(P)$(CA)digitalFilterControl")
+#    field(FLNK, "$(P)$(CA)refreshFanout4")
+}
 
 record(ai, "$(P)$(CA)read")
 {
     field(PINI, "YES")
-    field(SCAN, "5 second")
+    field(SCAN, "2 second")
     field(DTYP, "asynFloat64")
 #    field(DTYP, "asynOctetRead")
 #    field(INP,  "@asyn($(PORT))")

@@ -55,7 +55,7 @@ record( fanout, "$(P)$(CA)refreshFanout4")
 record(ai, "$(P)$(CA)read")
 {
     field(PINI, "YES")
-    field(SCAN, "5 second")
+    field(SCAN, "2 second")
     field(DTYP, "asynFloat64")
 #    field(DTYP, "asynOctetRead")
 #    field(INP,  "@asyn($(PORT))")
