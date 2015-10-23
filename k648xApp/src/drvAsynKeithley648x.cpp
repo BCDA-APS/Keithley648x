@@ -207,6 +207,10 @@ static asynStatus writeRange(int which, Port *pport, void* data, Type Iface);
 static asynStatus readRate(int which, Port *pport, void* data, 
                            Type Iface, size_t *length, int *eom);
 static asynStatus writeRate(int which, Port *pport, void* data, Type Iface);
+static asynStatus readVoltageSettings(int which, Port *pport, void* data, 
+                                            Type Iface, size_t *length, int *eom);
+static asynStatus writeVoltageSettings(int which, Port *pport, void* data, 
+                                              Type Iface);
 static asynStatus readCommon(int which, Port *pport, void* data, 
                              Type Iface, size_t *length, int *eom);
 static asynStatus writeCommon(int which, Port *pport, void* data, Type Iface);
@@ -217,44 +221,50 @@ static asynStatus writeCommon(int which, Port *pport, void* data, Type Iface);
 // General commands that need special attention go here
 enum { VOID_CMD, READ_CMD, RANGE_CMD, RANGE_AUTO_ULIMIT_CMD, 
        RANGE_AUTO_LLIMIT_CMD, RATE_CMD, DIGITAL_FILTER_CONTROL_CMD,
-       VOLT_RANGE_CMD, 
-       GEN_CMD_NUMBER };
+       VOLTAGE_RANGE_CMD, VOLTAGE_CURRENT_LIMIT_CMD,      GEN_CMD_NUMBER };
 static GenCommand genCommandTable[GEN_CMD_NUMBER] = 
   {
-    { readDummy,          writeDummy},  // VOID
-    { readSensorReading,  writeDummy},  // READ
-    { readRange,          writeRange},  // RANGE
-    { readRange,          writeRange},  // RANGE_AUTO_ULIMIT
-    { readRange,          writeRange},  // RANGE_AUTO_LLIMIT
-    { readRate,           writeRate},   // RATE
-    { readCommon,         writeCommon}, // DIGITAL_FILTER_CONTROL
-    { readCommon,         writeCommon}, // VOLT_RANGE_COMMAND
+    { readDummy,           writeDummy},     // VOID
+    { readSensorReading,   writeDummy},     // READ
+    { readRange,           writeRange},     // RANGE
+    { readRange,           writeRange},     // RANGE_AUTO_ULIMIT
+    { readRange,           writeRange},     // RANGE_AUTO_LLIMIT
+    { readRate,            writeRate},      // RATE
+    { readCommon,          writeCommon},    // DIGITAL_FILTER_CONTROL
+    { readVoltageSettings, writeVoltageSettings}, // VOLTAGE_RANGE_COMMAND
+    { readVoltageSettings, writeVoltageSettings}, // VOLTAGE_CURRENT_LIMIT_COMMAND
   };
 
 // commands that are very simple-minded go here
 enum { RESET_CMD, RANGE_AUTO_CMD,
        ZERO_CHECK_CMD, ZERO_CORRECT_CMD, ZERO_CORRECT_ACQUIRE_CMD, 
        MEDIAN_FILTER_CMD, MEDIAN_FILTER_RANK_CMD, 
-       DIGITAL_FILTER_CMD, DIGITAL_FILTER_COUNT_CMD,
+       DIGITAL_FILTER_CMD, DIGITAL_FILTER_COUNT_CMD, 
+       VOLTAGE_CMD, VOLTAGE_STATE_CMD, VOLTAGE_10V_INTERLOCK_CMD, VOLTAGE_INTERLOCK_STATUS_CMD,
        SIMPLE_CMD_NUMBER};
 
 enum { SIMPLE_TRIGGER=0, SIMPLE_OCTET=Octet, SIMPLE_FLOAT64=Float64, 
        SIMPLE_INT32=Int32 };
 static SimpleCommand simpleCommandTable[SIMPLE_CMD_NUMBER] = 
   {
-    { SIMPLE_TRIGGER, "*RST"},           // RESET DEVICE
+    { SIMPLE_TRIGGER, "*RST"},                // RESET DEVICE
 
-    { SIMPLE_INT32,   ":RANGE:AUTO"},    // RANGE_AUTO
+    { SIMPLE_INT32,   ":RANGE:AUTO"},         // RANGE_AUTO
 
-    { SIMPLE_INT32,   "SYST:ZCH"},       // ZERO CHECK
-    { SIMPLE_INT32,   "SYST:ZCOR"},      // ZERO CORRECT
-    { SIMPLE_TRIGGER, "SYST:ZCOR:ACQ"},  // ZERO CORRECT ACQUIRE
+    { SIMPLE_INT32,   "SYST:ZCH"},            // ZERO CHECK
+    { SIMPLE_INT32,   "SYST:ZCOR"},           // ZERO CORRECT
+    { SIMPLE_TRIGGER, "SYST:ZCOR:ACQ"},       // ZERO CORRECT ACQUIRE
 
-    { SIMPLE_INT32,   "MED"},            // MEDIAN FILTER
-    { SIMPLE_INT32,   "MED:RANK"},       // MEDIAN FILTER RANK
+    { SIMPLE_INT32,   "MED"},                 // MEDIAN FILTER
+    { SIMPLE_INT32,   "MED:RANK"},            // MEDIAN FILTER RANK
 
-    { SIMPLE_INT32,   "AVER"},           // DIGITAL FILTER
-    { SIMPLE_INT32,   "AVER:COUN"},      // DIGITAL FILTER COUNT
+    { SIMPLE_INT32,   "AVER"},                // DIGITAL FILTER
+    { SIMPLE_INT32,   "AVER:COUN"},           // DIGITAL FILTER COUNT
+
+    { SIMPLE_FLOAT64, "SOUR:VOLT"},           // VOLTAGE
+    { SIMPLE_INT32,   "SOUR:VOLT:STAT"},      // VOLTAGE STATE
+    { SIMPLE_INT32,   "SOUR:VOLT:INT"},       // VOLTAGE 10V INTERLOCK
+    { SIMPLE_INT32,   "SOUR:VOLT:INT:FAIL"},  // VOLTAGE INTERLOCK STATUS
 
     // { SIMPLE_INT32,   "AVER:"},      // 
     // { SIMPLE_INT32,   "AVER:"},      // 
@@ -273,38 +283,43 @@ enum { CMD_GEN, CMD_SIMPLE, CMD_CACHE };
 enum { DEV_ALL, DEV_6485, DEV_6487};
 static Command commandTable[ COMMAND_NUMBER ] = 
   {
-    { "VOID",                   DEV_ALL,  CMD_GEN,    VOID_CMD                   },
-    { "READ",                   DEV_ALL,  CMD_GEN,    READ_CMD                   },
-    { "RANGE",                  DEV_ALL,  CMD_GEN,    RANGE_CMD                  },
-    { "RANGE_AUTO_ULIMIT",      DEV_ALL,  CMD_GEN,    RANGE_AUTO_ULIMIT_CMD      },
-    { "RANGE_AUTO_LLIMIT",      DEV_ALL,  CMD_GEN,    RANGE_AUTO_LLIMIT_CMD      },
-    { "RATE",                   DEV_ALL,  CMD_GEN,    RATE_CMD                   },
-    { "DIGITAL_FILTER_CONTROL", DEV_ALL,  CMD_GEN,    DIGITAL_FILTER_CONTROL_CMD },
-    { "VOLT_RANGE",             DEV_6487, CMD_GEN,    VOLT_RANGE_CMD             },
-    { "RESET",                  DEV_ALL,  CMD_SIMPLE, RESET_CMD                  },
-    { "RANGE_AUTO",             DEV_ALL,  CMD_SIMPLE, RANGE_AUTO_CMD             },
-    { "ZERO_CHECK",             DEV_ALL,  CMD_SIMPLE, ZERO_CHECK_CMD             },
-    { "ZERO_CORRECT",           DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_CMD           },
-    { "ZERO_CORRECT_ACQUIRE",   DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_ACQUIRE_CMD   },
-    { "MEDIAN_FILTER",          DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_CMD          },
-    { "MEDIAN_FILTER_RANK",     DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_RANK_CMD     },
-    { "DIGITAL_FILTER",         DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_CMD         },
-    { "DIGITAL_FILTER_COUNT",   DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_COUNT_CMD   },
-    { "MODEL",                  DEV_ALL,  CMD_CACHE,  MODEL_CMD                  },
-    { "SERIAL",                 DEV_ALL,  CMD_CACHE,  SERIAL_CMD                 },
-    { "DIG_REV",                DEV_ALL,  CMD_CACHE,  DIG_REV_CMD                },
-    { "DISP_REV",               DEV_ALL,  CMD_CACHE,  DISP_REV_CMD               },
-    { "BRD_REV",                DEV_ALL,  CMD_CACHE,  BRD_REV_CMD                },
-    { "TIMESTAMP",              DEV_ALL,  CMD_CACHE,  TIMESTAMP_CMD              },
-    { "STATUS_RAW",             DEV_ALL,  CMD_CACHE,  STATUS_RAW_CMD             },
-    { "STATUS_OVERFLOW",        DEV_ALL,  CMD_CACHE,  STATUS_OVERFLOW_CMD        },
-    { "STATUS_FILTER",          DEV_ALL,  CMD_CACHE,  STATUS_FILTER_CMD          },
-    { "STATUS_MATH",            DEV_ALL,  CMD_CACHE,  STATUS_MATH_CMD            },
-    { "STATUS_NULL",            DEV_ALL,  CMD_CACHE,  STATUS_NULL_CMD            },
-    { "STATUS_LIMITS",          DEV_ALL,  CMD_CACHE,  STATUS_LIMITS_CMD          },
-    { "STATUS_OVERVOLTAGE",     DEV_ALL,  CMD_CACHE,  STATUS_OVERVOLTAGE_CMD     },
-    { "STATUS_ZERO_CHECK",      DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CHECK_CMD      },
-    { "STATUS_ZERO_CORRECT",    DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CORRECT_CMD    },
+    { "VOID",                     DEV_ALL,  CMD_GEN,    VOID_CMD                     },
+    { "READ",                     DEV_ALL,  CMD_GEN,    READ_CMD                     },
+    { "RANGE",                    DEV_ALL,  CMD_GEN,    RANGE_CMD                    },
+    { "RANGE_AUTO_ULIMIT",        DEV_ALL,  CMD_GEN,    RANGE_AUTO_ULIMIT_CMD        },
+    { "RANGE_AUTO_LLIMIT",        DEV_ALL,  CMD_GEN,    RANGE_AUTO_LLIMIT_CMD        },
+    { "RATE",                     DEV_ALL,  CMD_GEN,    RATE_CMD                     },
+    { "DIGITAL_FILTER_CONTROL",   DEV_ALL,  CMD_GEN,    DIGITAL_FILTER_CONTROL_CMD   },
+    { "VOLTAGE_RANGE",            DEV_6487, CMD_GEN,    VOLTAGE_RANGE_CMD            },
+    { "VOLTAGE_CURRENT_LIMIT",    DEV_6487, CMD_GEN,    VOLTAGE_CURRENT_LIMIT_CMD    },
+    { "RESET",                    DEV_ALL,  CMD_SIMPLE, RESET_CMD                    },
+    { "RANGE_AUTO",               DEV_ALL,  CMD_SIMPLE, RANGE_AUTO_CMD               },
+    { "ZERO_CHECK",               DEV_ALL,  CMD_SIMPLE, ZERO_CHECK_CMD               },
+    { "ZERO_CORRECT",             DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_CMD             },
+    { "ZERO_CORRECT_ACQUIRE",     DEV_ALL,  CMD_SIMPLE, ZERO_CORRECT_ACQUIRE_CMD     },
+    { "MEDIAN_FILTER",            DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_CMD            },
+    { "MEDIAN_FILTER_RANK",       DEV_ALL,  CMD_SIMPLE, MEDIAN_FILTER_RANK_CMD       },
+    { "DIGITAL_FILTER",           DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_CMD           },
+    { "DIGITAL_FILTER_COUNT",     DEV_ALL,  CMD_SIMPLE, DIGITAL_FILTER_COUNT_CMD     },
+    { "VOLTAGE",                  DEV_6487, CMD_SIMPLE, VOLTAGE_CMD                  },
+    { "VOLTAGE_STATE",            DEV_6487, CMD_SIMPLE, VOLTAGE_STATE_CMD            },
+    { "VOLTAGE_TENV_INTERLOCK",   DEV_6487, CMD_SIMPLE, VOLTAGE_10V_INTERLOCK_CMD    },
+    { "VOLTAGE_INTERLOCK_STATUS", DEV_6487, CMD_SIMPLE, VOLTAGE_INTERLOCK_STATUS_CMD },
+    { "MODEL",                    DEV_ALL,  CMD_CACHE,  MODEL_CMD                    },
+    { "SERIAL",                   DEV_ALL,  CMD_CACHE,  SERIAL_CMD                   },
+    { "DIG_REV",                  DEV_ALL,  CMD_CACHE,  DIG_REV_CMD                  },
+    { "DISP_REV",                 DEV_ALL,  CMD_CACHE,  DISP_REV_CMD                 },
+    { "BRD_REV",                  DEV_ALL,  CMD_CACHE,  BRD_REV_CMD                  },
+    { "TIMESTAMP",                DEV_ALL,  CMD_CACHE,  TIMESTAMP_CMD                },
+    { "STATUS_RAW",               DEV_ALL,  CMD_CACHE,  STATUS_RAW_CMD               },
+    { "STATUS_OVERFLOW",          DEV_ALL,  CMD_CACHE,  STATUS_OVERFLOW_CMD          },
+    { "STATUS_FILTER",            DEV_ALL,  CMD_CACHE,  STATUS_FILTER_CMD            },
+    { "STATUS_MATH",              DEV_ALL,  CMD_CACHE,  STATUS_MATH_CMD              },
+    { "STATUS_NULL",              DEV_ALL,  CMD_CACHE,  STATUS_NULL_CMD              },
+    { "STATUS_LIMITS",            DEV_ALL,  CMD_CACHE,  STATUS_LIMITS_CMD            },
+    { "STATUS_OVERVOLTAGE",       DEV_ALL,  CMD_CACHE,  STATUS_OVERVOLTAGE_CMD       },
+    { "STATUS_ZERO_CHECK",        DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CHECK_CMD        },
+    { "STATUS_ZERO_CORRECT",      DEV_ALL,  CMD_CACHE,  STATUS_ZERO_CORRECT_CMD      },
   };
 
 
@@ -336,8 +351,7 @@ int drvAsynKeithley648x(const char *type, const char *myport,
   if(pport->devtype == DEV_ALL) // DEV_ALL is not a real device
     {
       errlogPrintf("%s::drvAsynKeithley6485 type has to be "
-                   "either \'6485\' or \'6487\'.\n",
-                   driver, myport, ioport, ioaddr);
+                   "either \'6485\' or \'6487\'.\n", driver);
       return asynError;
     }
 
@@ -810,13 +824,108 @@ static asynStatus writeRate( int which, Port *pport, void *data, Type Iface)
 }
 
 
+static asynStatus readVoltageSettings(int which, Port *pport, void *data, Type Iface, 
+                                      size_t *length, int *eom)
+{
+  asynStatus status;
+  char inpBuf[BUFFER_SIZE];
+
+  double val;
+
+  if(( which != VOLTAGE_RANGE_CMD) && ( which != VOLTAGE_CURRENT_LIMIT_CMD))
+    return asynError;
+  if( Iface == Octet)
+    return asynSuccess;
+
+  if( which == VOLTAGE_RANGE_CMD)
+    status = writeRead( pport, "SOUR:VOLT:RANGE?", inpBuf, BUFFER_SIZE, 
+                        &pport->data.eom);
+  else
+    status = writeRead( pport, "SOUR:VOLT:ILIM?", inpBuf, BUFFER_SIZE, 
+                        &pport->data.eom);
+  if( status != asynSuccess)
+    return status;
+
+  val = atof( inpBuf);
+  if( val == 0.0)
+    return asynError;
+
+  if( Iface == Float64)
+    {
+      *((epicsFloat64*) data) = val;
+    }
+  else if( Iface == Int32)
+    {
+      if( which == VOLTAGE_RANGE_CMD)
+        {
+          if( val == 10.0)
+            *((epicsInt32*) data) = 0;
+          else if( val == 50.0)
+            *((epicsInt32*) data) = 1;
+          else if( val == 500.0)
+            *((epicsInt32*) data) = 2;
+        }
+      else
+        {
+          if( val == 2.5e-5)
+            *((epicsInt32*) data) = 0;
+          else if( val == 2.5e-4)
+            *((epicsInt32*) data) = 1;
+          else if( val == 2.5e-3)
+            *((epicsInt32*) data) = 2;
+          else if( val == 2.5e-2)
+            *((epicsInt32*) data) = 3;
+        }
+    }
+
+  return asynSuccess;
+}
+
+
+static asynStatus writeVoltageSettings( int which, Port *pport, void *data, Type Iface)
+{
+  char outBuf[BUFFER_SIZE];
+  int value;
+
+  if(( which != VOLTAGE_RANGE_CMD) && ( which != VOLTAGE_CURRENT_LIMIT_CMD))
+    return asynError;
+  if( Iface != Int32)
+    return asynSuccess;
+
+  value = *((epicsInt32*) data);
+  if( which == VOLTAGE_RANGE_CMD) 
+    {
+      if( (value < 0) || (value > 2) )
+        return asynError;
+
+      if( value == 0)
+        value = 10;
+      else if( value == 1)
+        value = 50;
+      else 
+        value = 500;
+   
+      sprintf( outBuf, "SOUR:VOLT:RANGE %d", value );
+    }
+  else
+    {
+      if( (value < 0) || (value > 3) )
+        return asynError;
+
+      sprintf( outBuf, "SOUR:VOLT:ILIM 2.5e%d", value - 5 );
+    }
+
+  return writeOnly( pport, outBuf);
+}
+
+
 static asynStatus readCommon(int which, Port *pport, void *data, 
                              Type Iface, size_t *length, int *eom)
 {
   asynStatus status;
   char inpBuf[BUFFER_SIZE];
 
-  int val;
+  int val = 0;
 
   if( Iface != Int32)
     return asynSuccess;

@@ -1,14 +1,14 @@
 
 file {
-	name="/home/oxygen/DOHNARMS/epics_modules/hardware/Keithley_648x/k648x/k648xApp/op/adl/Keithley6485small.adl"
+	name="/home/oxygen25/DOHNARMS/epics_modules/hardware/Keithley_648x/k648x/k648xApp/op/adl/Keithley6487small.adl"
 	version=030107
 }
 display {
 	object {
-		x=895
-		y=118
+		x=367
+		y=709
 		width=400
-		height=130
+		height=200
 	}
 	clr=14
 	bclr=3
@@ -184,7 +184,7 @@ text {
 	"basic attribute" {
 		clr=54
 	}
-	textix="Keithley 6485 picoammeter"
+	textix="Keithley 6487 picoammeter"
 }
 "related display" {
 	object {
@@ -249,7 +249,7 @@ text {
 		height=20
 	}
 	display[0] {
-		name="Keithley6485.adl"
+		name="Keithley6487.adl"
 		args="P=$(P),CA=$(CA)"
 		policy="replace display"
 	}
@@ -271,4 +271,119 @@ text {
 	}
 	label="Reset"
 	press_msg="1"
+}
+"text update" {
+	object {
+		x=225
+		y=175
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(CA):voltage"
+		clr=14
+		bclr=55
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=115
+		y=175
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(CA):voltageSet"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=245
+		y=150
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(CA):voltageState"
+		clr=14
+		bclr=55
+	}
+	limits {
+	}
+}
+menu {
+	object {
+		x=165
+		y=150
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(CA):voltageStateSet"
+		clr=14
+		bclr=4
+	}
+}
+text {
+	object {
+		x=25
+		y=150
+		width=125
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Voltage State:"
+	align="horiz. right"
+}
+polyline {
+	object {
+		x=0
+		y=135
+		width=399
+		height=2
+	}
+	"basic attribute" {
+		clr=14
+		width=2
+	}
+	points {
+		(1,136)
+		(398,136)
+	}
+}
+text {
+	object {
+		x=5
+		y=175
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Voltage:"
+	align="horiz. right"
+}
+oval {
+	object {
+		x=360
+		y=155
+		width=25
+		height=25
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(CA):voltageInterlockStatus"
+	}
 }

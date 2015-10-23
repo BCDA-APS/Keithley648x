@@ -1,0 +1,637 @@
+## Instrument management related PVs
+
+record(bo, "$(P)$(CA)reset")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RESET")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)refreshFanout1")
+}
+
+record( fanout, "$(P)$(CA)refresh")
+{
+    field(LNK1, "$(P)$(CA)refreshFanout1")
+}
+
+record( fanout, "$(P)$(CA)refreshFanout1")
+{
+    field(LNK1, "$(P)$(CA)rate")
+    field(LNK2, "$(P)$(CA)range")
+    field(LNK3, "$(P)$(CA)rangeAuto")
+    field(LNK4, "$(P)$(CA)rangeAutoUlimit")
+    field(LNK5, "$(P)$(CA)rangeAutoLlimit")
+    field(FLNK, "$(P)$(CA)refreshFanout2")
+}
+
+record( fanout, "$(P)$(CA)refreshFanout2")
+{
+    field(LNK1, "$(P)$(CA)zeroCheck")
+    field(LNK2, "$(P)$(CA)zeroCorrect")
+    field(FLNK, "$(P)$(CA)refreshFanout3")
+}
+
+record( fanout, "$(P)$(CA)refreshFanout3")
+{
+    field(LNK1, "$(P)$(CA)medianFilter")
+    field(LNK2, "$(P)$(CA)medianFilterRank")
+    field(LNK3, "$(P)$(CA)digitalFilter")
+    field(LNK4, "$(P)$(CA)digitalFilterCount")
+    field(LNK5, "$(P)$(CA)digitalFilterControl")
+    field(FLNK, "$(P)$(CA)refreshFanout4")
+}
+
+record( fanout, "$(P)$(CA)refreshFanout4")
+{
+    field(LNK1, "$(P)$(CA)voltageState")
+    field(LNK2, "$(P)$(CA)voltage")
+    field(LNK3, "$(P)$(CA)voltageSettingsFanout")
+#    field(LNK4, "$(P)$(CA)")
+#    field(LNK5, "$(P)$(CA)")
+#    field(LNK6, "$(P)$(CA)")
+}
+
+
+record(ai, "$(P)$(CA)read")
+{
+    field(PINI, "YES")
+    field(SCAN, "5 second")
+    field(DTYP, "asynFloat64")
+#    field(DTYP, "asynOctetRead")
+#    field(INP,  "@asyn($(PORT))")
+    field(PREC, "5")
+    field(INP,  "@asyn($(PORT)) READ")
+    field(FLNK, "$(P)$(CA)readValFanout1")
+}
+
+record( fanout, "$(P)$(CA)readValFanout1")
+{
+    field(LNK1, "$(P)$(CA)readStatusOverflow")
+    field(LNK2, "$(P)$(CA)readStatusFilter")
+    field(LNK3, "$(P)$(CA)readStatusMath")
+    field(LNK4, "$(P)$(CA)readStatusNull")
+    field(LNK5, "$(P)$(CA)readStatusLimits")
+    field(FLNK, "$(P)$(CA)readValFanout2")
+}
+record( fanout, "$(P)$(CA)readValFanout2")
+{
+    field(LNK1, "$(P)$(CA)readStatusOvervoltage")
+    field(LNK2, "$(P)$(CA)readStatusZeroCheck")
+    field(LNK3, "$(P)$(CA)readStatusZeroCorrect")
+    field(LNK4, "$(P)$(CA)readStatusRaw")
+    field(LNK5, "$(P)$(CA)readTimestamp")
+}
+
+record(bi, "$(P)$(CA)readStatusOverflow")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_OVERFLOW")
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+}
+
+record(bi, "$(P)$(CA)readStatusFilter")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_FILTER")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+
+record(bi, "$(P)$(CA)readStatusMath")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_MATH")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+
+record(bi, "$(P)$(CA)readStatusNull")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_NULL")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+
+record(mbbi, "$(P)$(CA)readStatusLimits")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_LIMITS")
+    field(ZRVL, "0")
+    field(ZRST, "Passed")
+    field(ONVL, "1")
+    field(ONST, "Limit 1 Failed")
+    field(TWVL, "2")
+    field(TWST, "Limit 2 Failed")
+    field(THVL, "3")
+    field(THST, "Disabled")
+}
+
+record(bi, "$(P)$(CA)readStatusOvervoltage")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_OVERVOLTAGE")
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+}
+
+record(bi, "$(P)$(CA)readStatusZeroCheck")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_ZERO_CHECK")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+
+record(bi, "$(P)$(CA)readStatusZeroCorrect")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_ZERO_CORRECT")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+
+record(longin, "$(P)$(CA)readStatusRaw")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) STATUS_RAW")
+}
+
+record(longin, "$(P)$(CA)readTimestamp")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) TIMESTAMP")
+}
+
+
+
+record(stringin, "$(P)$(CA)model")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT)) MODEL")
+}
+
+record(stringin, "$(P)$(CA)serial")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT)) SERIAL")
+}
+
+record(stringin, "$(P)$(CA)digRev")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT)) DIG_REV")
+}
+
+record(stringin, "$(P)$(CA)dispRev")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT)) DISP_REV")
+}
+
+record(stringin, "$(P)$(CA)brdRev")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT)) BRD_REV")
+}
+
+
+record(mbbo, "$(P)$(CA)rateSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RATE")
+    field(ZRVL, "0")
+    field(ZRST, "Slow")
+    field(ONVL, "1")
+    field(ONST, "Medium")
+    field(TWVL, "2")
+    field(TWST, "Fast")
+    field(FLNK, "$(P)$(CA)rate")
+}
+
+record(mbbi, "$(P)$(CA)rate")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) RATE")
+    field(ZRVL, "0")
+    field(ZRST, "Slow")
+    field(ONVL, "1")
+    field(ONST, "Medium")
+    field(TWVL, "2")
+    field(TWST, "Fast")
+}
+
+
+record(mbbo, "$(P)$(CA)rangeSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RANGE")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+    field(FLNK, "$(P)$(CA)range")
+}
+
+record(mbbi, "$(P)$(CA)range")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) RANGE")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+}
+
+record(bo, "$(P)$(CA)rangeAutoSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RANGE_AUTO")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)rangeAuto")
+}
+
+record(bi, "$(P)$(CA)rangeAuto")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) RANGE_AUTO")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+record(mbbo, "$(P)$(CA)rangeAutoUlimitSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RANGE_AUTO_ULIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+    field(FLNK, "$(P)$(CA)rangeAutoUlimit")
+}
+
+record(mbbi, "$(P)$(CA)rangeAutoUlimit")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) RANGE_AUTO_ULIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+}
+
+record(mbbo, "$(P)$(CA)rangeAutoLlimitSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) RANGE_AUTO_LLIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+    field(FLNK, "$(P)$(CA)rangeAutoLlimit")
+}
+
+record(mbbi, "$(P)$(CA)rangeAutoLlimit")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) RANGE_AUTO_LLIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "2nA")
+    field(ONVL, "1")
+    field(ONST, "20nA")
+    field(TWVL, "2")
+    field(TWST, "200nA")
+    field(THVL, "3")
+    field(THST, "2uA")
+    field(FRVL, "4")
+    field(FRST, "20uA")
+    field(FVVL, "5")
+    field(FVST, "200uA")
+    field(SXVL, "6")
+    field(SXST, "2mA")
+    field(SVVL, "7")
+    field(SVST, "20mA")
+}
+
+
+record(bo, "$(P)$(CA)zeroCheckSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) ZERO_CHECK")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)zeroCheck")
+}
+
+record(bi, "$(P)$(CA)zeroCheck")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) ZERO_CHECK")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+record(bo, "$(P)$(CA)zeroCorrectSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) ZERO_CORRECT")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)zeroCorrect")
+}
+
+record(bi, "$(P)$(CA)zeroCorrect")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) ZERO_CORRECT")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+record(bo, "$(P)$(CA)zeroCorrectAcquire")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) ZERO_CORRECT_ACQUIRE")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+
+record(bo, "$(P)$(CA)medianFilterSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) MEDIAN_FILTER")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)medianFilter")
+}
+record(bi, "$(P)$(CA)medianFilter")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) MEDIAN_FILTER")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+record(longout, "$(P)$(CA)medianFilterRankSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) MEDIAN_FILTER_RANK")
+    field(FLNK, "$(P)$(CA)medianFilterRank")
+}
+record(longin, "$(P)$(CA)medianFilterRank")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) MEDIAN_FILTER_RANK")
+}
+
+
+record(bo, "$(P)$(CA)digitalFilterSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) DIGITAL_FILTER")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)digitalFilter")
+}
+record(bi, "$(P)$(CA)digitalFilter")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) DIGITAL_FILTER")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+record(longout, "$(P)$(CA)digitalFilterCountSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) DIGITAL_FILTER_COUNT")
+    field(FLNK, "$(P)$(CA)digitalFilterCount")
+}
+record(longin, "$(P)$(CA)digitalFilterCount")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) DIGITAL_FILTER_COUNT")
+}
+
+record(bo, "$(P)$(CA)digitalFilterControlSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) DIGITAL_FILTER_CONTROL")
+    field(ZNAM, "Moving")
+    field(ONAM, "Repeat")
+    field(FLNK, "$(P)$(CA)digitalFilterControl")
+}
+record(bi, "$(P)$(CA)digitalFilterControl")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) DIGITAL_FILTER_CONTROL")
+    field(ZNAM, "Moving")
+    field(ONAM, "Repeat")
+}
+
+##################################
+
+
+record( fanout, "$(P)$(CA)voltageSettingsFanout")
+{
+    field(LNK1, "$(P)$(CA)voltageRange")
+    field(LNK2, "$(P)$(CA)voltageCurrentLimit")
+    field(LNK3, "$(P)$(CA)voltage10VInterlock")
+    field(LNK4, "$(P)$(CA)voltageInterlockStatus")
+}
+
+record(mbbo, "$(P)$(CA)voltageRangeSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) VOLTAGE_RANGE")
+    field(ZRVL, "0")
+    field(ZRST, "10 V")
+    field(ONVL, "1")
+    field(ONST, "50 V")
+    field(TWVL, "2")
+    field(TWST, "500 V")
+    field(FLNK, "$(P)$(CA)voltageSettingsFanout")
+}
+record(mbbi, "$(P)$(CA)voltageRange")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) VOLTAGE_RANGE")
+    field(ZRVL, "0")
+    field(ZRST, "10 V")
+    field(ONVL, "1")
+    field(ONST, "50 V")
+    field(TWVL, "2")
+    field(TWST, "500 V")
+}
+
+record(mbbo, "$(P)$(CA)voltageCurrentLimitSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) VOLTAGE_CURRENT_LIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "25 uA")
+    field(ONVL, "1")
+    field(ONST, "250 uA")
+    field(TWVL, "2")
+    field(TWST, "2.5 mA")
+    field(THVL, "3")
+    field(THST, "25 mA")
+    field(FLNK, "$(P)$(CA)voltageSettingsFanout")
+}
+record(mbbi, "$(P)$(CA)voltageCurrentLimit")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) VOLTAGE_CURRENT_LIMIT")
+    field(ZRVL, "0")
+    field(ZRST, "25 uA")
+    field(ONVL, "1")
+    field(ONST, "250 uA")
+    field(TWVL, "2")
+    field(TWST, "2.5 mA")
+    field(THVL, "3")
+    field(THST, "25 mA")
+}
+
+
+record(bi, "$(P)$(CA)voltageInterlockStatus")
+{
+    field(SCAN, "2 second")
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) VOLTAGE_INTERLOCK_STATUS")
+    field(ZNAM, "Pass")
+    field(ONAM, "Fail")
+}
+
+
+record(bo, "$(P)$(CA)voltage10VInterlockSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) VOLTAGE_TENV_INTERLOCK")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)voltageSettingsFanout")
+}
+record(bi, "$(P)$(CA)voltage10VInterlock")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) VOLTAGE_TENV_INTERLOCK")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+
+record(bo, "$(P)$(CA)voltageStateSet")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT)) VOLTAGE_STATE")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(FLNK, "$(P)$(CA)voltageState")
+}
+record(bi, "$(P)$(CA)voltageState")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT)) VOLTAGE_STATE")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+}
+
+
+
+record(ao, "$(P)$(CA)voltageSet")
+{
+    field(DTYP, "asynFloat64")
+    field(OUT,  "@asyn($(PORT)) VOLTAGE")
+    field(FLNK, "$(P)$(CA)voltage")
+}
+record(ai, "$(P)$(CA)voltage")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT)) VOLTAGE")
+}

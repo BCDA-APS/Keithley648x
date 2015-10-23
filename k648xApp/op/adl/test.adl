@@ -95,8 +95,13 @@ display {
 		height=20
 	}
 	display[0] {
-		label="CA"
+		label="6485"
 		name="Keithley6485.adl"
+		args="P=k648x:,CA=CA1"
+	}
+	display[1] {
+		label="6487"
+		name="Keithley6487.adl"
 		args="P=k648x:,CA=CA1"
 	}
 	clr=0
