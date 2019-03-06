@@ -1,13 +1,14 @@
 /*
  Description
     This module provides support for a multiple device port driver. To
-    initialize the driver, the method drvAsynKeithley6485() is called from the
+    initialize the driver, the method drvAsynKeithley648x() is called from the
     startup script with the following calling sequence.
 
-        drvAsynKeithley6485(myport,ioport,ioaddr)
+        drvAsynKeithley648x(type,myport,ioport,ioaddr)
 
         Where:
-            myport - Keithley6485 Asyn interface port driver name (i.e. "EP0" )
+            type   - "6485" or "6487"
+            myport - Keithley648x Asyn interface port driver name (i.e. "EP0" )
             ioport - Communication port driver name (i.e. "S0" )
             ioaddr - Communication port device addr
 

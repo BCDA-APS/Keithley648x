@@ -5,10 +5,10 @@ file {
 }
 display {
 	object {
-		x=895
-		y=118
+		x=1114
+		y=798
 		width=400
-		height=130
+		height=110
 	}
 	clr=14
 	bclr=3
@@ -90,7 +90,7 @@ display {
 "text update" {
 	object {
 		x=10
-		y=105
+		y=85
 		width=150
 		height=20
 	}
@@ -107,7 +107,7 @@ display {
 menu {
 	object {
 		x=190
-		y=105
+		y=85
 		width=100
 		height=20
 	}
@@ -120,7 +120,7 @@ menu {
 text {
 	object {
 		x=165
-		y=105
+		y=85
 		width=25
 		height=20
 	}
@@ -132,7 +132,7 @@ text {
 composite {
 	object {
 		x=295
-		y=105
+		y=85
 		width=60
 		height=20
 	}
@@ -141,7 +141,7 @@ composite {
 		"message button" {
 			object {
 				x=295
-				y=105
+				y=85
 				width=60
 				height=20
 			}
@@ -161,8 +161,8 @@ composite {
 }
 "related display" {
 	object {
-		x=310
-		y=75
+		x=115
+		y=60
 		width=40
 		height=20
 	}
@@ -177,7 +177,7 @@ composite {
 text {
 	object {
 		x=10
-		y=10
+		y=5
 		width=250
 		height=20
 	}
@@ -189,7 +189,7 @@ text {
 "related display" {
 	object {
 		x=190
-		y=40
+		y=30
 		width=60
 		height=20
 	}
@@ -203,8 +203,8 @@ text {
 }
 text {
 	object {
-		x=95
-		y=40
+		x=275
+		y=5
 		width=100
 		height=20
 	}
@@ -216,7 +216,7 @@ text {
 polyline {
 	object {
 		x=0
-		y=64
+		y=55
 		width=399
 		height=2
 	}
@@ -225,14 +225,14 @@ polyline {
 		width=2
 	}
 	points {
-		(1,65)
-		(398,65)
+		(1,56)
+		(398,56)
 	}
 }
 text {
 	object {
 		x=25
-		y=75
+		y=60
 		width=100
 		height=20
 	}
@@ -244,7 +244,7 @@ text {
 "related display" {
 	object {
 		x=345
-		y=5
+		y=30
 		width=50
 		height=20
 	}
@@ -259,8 +259,8 @@ text {
 }
 "message button" {
 	object {
-		x=335
-		y=40
+		x=10
+		y=30
 		width=60
 		height=20
 	}

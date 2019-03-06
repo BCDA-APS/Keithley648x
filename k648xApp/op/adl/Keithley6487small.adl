@@ -1,14 +1,14 @@
 
 file {
-	name="/home/oxygen25/DOHNARMS/epics_modules/hardware/Keithley_648x/k648x/k648xApp/op/adl/Keithley6487small.adl"
+	name="/home/oxygen/DOHNARMS/epics_modules/hardware/Keithley_648x/k648x/k648xApp/op/adl/Keithley6487small.adl"
 	version=030107
 }
 display {
 	object {
-		x=367
-		y=709
+		x=1004
+		y=824
 		width=400
-		height=200
+		height=165
 	}
 	clr=14
 	bclr=3
@@ -90,7 +90,7 @@ display {
 "text update" {
 	object {
 		x=10
-		y=105
+		y=85
 		width=150
 		height=20
 	}
@@ -107,7 +107,7 @@ display {
 menu {
 	object {
 		x=190
-		y=105
+		y=85
 		width=100
 		height=20
 	}
@@ -120,7 +120,7 @@ menu {
 text {
 	object {
 		x=165
-		y=105
+		y=85
 		width=25
 		height=20
 	}
@@ -132,7 +132,7 @@ text {
 composite {
 	object {
 		x=295
-		y=105
+		y=85
 		width=60
 		height=20
 	}
@@ -141,7 +141,7 @@ composite {
 		"message button" {
 			object {
 				x=295
-				y=105
+				y=85
 				width=60
 				height=20
 			}
@@ -161,8 +161,8 @@ composite {
 }
 "related display" {
 	object {
-		x=310
-		y=75
+		x=115
+		y=60
 		width=40
 		height=20
 	}
@@ -177,7 +177,7 @@ composite {
 text {
 	object {
 		x=10
-		y=10
+		y=5
 		width=250
 		height=20
 	}
@@ -189,7 +189,7 @@ text {
 "related display" {
 	object {
 		x=190
-		y=40
+		y=30
 		width=60
 		height=20
 	}
@@ -203,8 +203,8 @@ text {
 }
 text {
 	object {
-		x=95
-		y=40
+		x=270
+		y=5
 		width=100
 		height=20
 	}
@@ -216,7 +216,7 @@ text {
 polyline {
 	object {
 		x=0
-		y=64
+		y=54
 		width=399
 		height=2
 	}
@@ -225,14 +225,14 @@ polyline {
 		width=2
 	}
 	points {
-		(1,65)
-		(398,65)
+		(1,55)
+		(398,55)
 	}
 }
 text {
 	object {
 		x=25
-		y=75
+		y=60
 		width=100
 		height=20
 	}
@@ -244,7 +244,7 @@ text {
 "related display" {
 	object {
 		x=345
-		y=5
+		y=30
 		width=50
 		height=20
 	}
@@ -259,8 +259,8 @@ text {
 }
 "message button" {
 	object {
-		x=335
-		y=40
+		x=5
+		y=30
 		width=60
 		height=20
 	}
@@ -275,7 +275,7 @@ text {
 "text update" {
 	object {
 		x=225
-		y=175
+		y=140
 		width=100
 		height=20
 	}
@@ -290,7 +290,7 @@ text {
 "text entry" {
 	object {
 		x=115
-		y=175
+		y=140
 		width=100
 		height=20
 	}
@@ -305,7 +305,7 @@ text {
 "text update" {
 	object {
 		x=245
-		y=150
+		y=115
 		width=100
 		height=20
 	}
@@ -320,7 +320,7 @@ text {
 menu {
 	object {
 		x=165
-		y=150
+		y=115
 		width=70
 		height=20
 	}
@@ -333,7 +333,7 @@ menu {
 text {
 	object {
 		x=25
-		y=150
+		y=115
 		width=125
 		height=20
 	}
@@ -346,7 +346,7 @@ text {
 polyline {
 	object {
 		x=0
-		y=135
+		y=110
 		width=399
 		height=2
 	}
@@ -355,14 +355,14 @@ polyline {
 		width=2
 	}
 	points {
-		(1,136)
-		(398,136)
+		(1,111)
+		(398,111)
 	}
 }
 text {
 	object {
 		x=5
-		y=175
+		y=140
 		width=100
 		height=20
 	}
@@ -375,7 +375,7 @@ text {
 oval {
 	object {
 		x=360
-		y=155
+		y=120
 		width=25
 		height=25
 	}
