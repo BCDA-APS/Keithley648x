@@ -1,27 +1,14 @@
 #!../../bin/linux-x86_64/k648x
 
-## You may have to change k648x to something else
-## everywhere it appears in this file
-
 < envPaths
 
-
-
-# save_restore.cmd needs the full path to the startup directory, which
-# envPaths currently does not provide
-#epicsEnvSet(STARTUP,$(TOP)/iocBoot/$(IOC))
-
-# Increase size of buffer for error logging from default 1256
-#errlogInit(20000)
-
-
 cd ${TOP}
+
 
 ## Register all support components
 dbLoadDatabase "dbd/k648x.dbd"
 k648x_registerRecordDeviceDriver pdbbase
 
-## Load record instances
 
 cd ${TOP}/iocBoot/${IOC}
 
@@ -62,4 +49,3 @@ dbLoadRecords("$(ASYN)/db/asynRecord.db", "P=k648x:,R=asyn_k648x,PORT=serial1,AD
 
 iocInit
 
-## Start any sequence programs
