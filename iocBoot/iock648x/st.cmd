@@ -13,7 +13,8 @@ k648x_registerRecordDeviceDriver pdbbase
 cd ${TOP}/iocBoot/${IOC}
 
 
-# serial 1
+############ Linux serial port ###############
+
 #drvAsynSerialPortConfigure("portName","ttyName",priority,noAutoConnect,
 #                            noProcessEos)
 drvAsynSerialPortConfigure("serial1", "/dev/ttyS1", 0, 0, 0)
@@ -32,17 +33,36 @@ asynOctetSetOutputEos("serial1",0,"\r")
 #                 int timeout, int buffer_len, const char *drvInfo)
 asynOctetConnect("serial1", "serial1")
 
-
-
+##### for 6485
 #drvAsynKeithley648x("6487", "CA1","serial1",-1);
 #dbLoadRecords("$(TOP)/k648xApp/Db/Keithley6487.db","P=k648x:,CA=CA1:,PORT=CA1"
 
+##### for 6487
 drvAsynKeithley648x("6485", "CA1","serial1",-1);
 dbLoadRecords("$(TOP)/k648xApp/Db/Keithley6485.db","P=k648x:,CA=CA1:,PORT=CA1"
 
-
-
+##### asyn record for debugging
 dbLoadRecords("$(ASYN)/db/asynRecord.db", "P=k648x:,R=asyn_k648x,PORT=serial1,ADDR=0,OMAX=256,IMAX=2048")
+
+########### network interface ###################
+
+# drvAsynIPPortConfigure("ip_ca1","10.0.0.20:4001", 0, 0, 0)
+# asynOctetSetInputEos("ip_ca1",0,"\r")
+# asynOctetSetOutputEos("ip_ca1",0,"\r")
+
+##### for 6485
+# drvAsynKeithley648x( "6485", "CA1","ip_ca1",-1);
+# dbLoadRecords("$(TOP)/k648xApp/Db/Keithley6485.db","P=29idb:,CA=ca1:,PORT=CA1")
+
+##### for 6487
+# drvAsynKeithley648x( "6487", "CA1","ip_ca1",-1);
+# dbLoadRecords("$(TOP)/k648xApp/Db/Keithley6487.db","P=29idb:,CA=ca1:,PORT=CA1")
+
+##### asyn record for debugging
+dbLoadRecords("$(ASYN)/db/asynRecord.db", "P=k648x:,R=asyn_k648x,PORT=ip_ca1,ADDR=0,OMAX=256,IMAX=2048")
+
+#####################################
+
 
 ## Run this to trace the stages of iocInit
 #traceIocInit
